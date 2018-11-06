@@ -2,37 +2,41 @@
 /**
  * DynamicModel is a model class primarily used to support ad hoc data validation.
  * The typical usage of DynamicModel is as follows,
- * ```php
+ * <pre>
  * $model = new DynamicModel(
- *     ['name', 'email'],
- *     [
- *        ['name, email', 'length', 'max' => 50],
- *     ]
+ *     array('name', 'email'),
+ *     array(
+ *        array('name, email', 'length', 'max' => 50),
+ *     ),
  * );
  * if ($model->hasErrors()) {
  *     // validation fails
  * } else {
  *     // validation succeeds
  * }
- * ```
+ * </pre>
  */
-class DynamicModel extends \CModel
+class DynamicModel extends CModel
 {
-    private $_rules = [];
-    private $_labels = [];
-    private $_attributes = [];
+    private $_rules = array();
+    private $_labels = array();
+    private $_attributes = array();
 
     /**
      * Constructor.
      * @param array  $attributes the dynamic attributes (name-value pairs, or names) being defined.
-     * @param array  $rules the validation rules. Please refer to [[CModel::rules()]] on the format of this parameter.
-     * @param array  $labels the attribute labels. By default an attribute label is generated using [[generateAttributeLabel]].
+     * @param array  $rules the validation rules. Please refer to {@see CModel::rules()} on the format of this parameter.
+     * @param array  $labels the attribute labels. By default an attribute label is generated using {@see generateAttributeLabel}.
      * @param string $scenario name of the scenario that this model is used in.
-     * See [[CModel::scenario]] on how scenario is used by models.
+     * See {@see CModel::scenario}} on how scenario is used by models.
      * @see getScenario
      */
-    public function __construct(array $attributes = [], $rules = [], $labels = [], $scenario = '')
-    {
+    public function __construct(
+        array $attributes = array(),
+        array $rules = array(),
+        array $labels = array(),
+        $scenario = ''
+    ) {
         foreach ($attributes as $name => $value) {
             if (is_integer($name)) {
                 $this->_attributes[$value] = null;
@@ -50,7 +54,7 @@ class DynamicModel extends \CModel
 
     /**
      * Initializes this model.
-     * This method is invoked in the constructor right after [[scenario]] is set.
+     * This method is invoked in the constructor right after {@see scenario} is set.
      * You may override this method to provide code that is needed to initialize the model (e.g. setting
      * initial property values.)
      */
@@ -61,7 +65,7 @@ class DynamicModel extends \CModel
     /**
      * Returns the attribute labels.
      * Attribute labels are mainly used in error messages of validation.
-     * By default an attribute label is generated using [[generateAttributeLabel]].
+     * By default an attribute label is generated using {@see generateAttributeLabel}.
      * This method allows you to explicitly specify attribute labels.
      * Note, in order to inherit labels defined in the parent class, a child class needs to
      * merge the parent labels with child labels using functions like array_merge().
@@ -98,18 +102,18 @@ class DynamicModel extends \CModel
     /**
      * Returns all attribute values.
      * @param array $names list of attributes whose value needs to be returned.
-     * Defaults to null, meaning all attributes as listed in [[attributeNames]] will be returned.
+     * Defaults to null, meaning all attributes as listed in {@see attributeNames} will be returned.
      * If it is an array, only the attributes in the array will be returned.
      * @return array attribute values (name=>value).
      */
     public function getAttributes($names = null)
     {
-        $values = [];
+        $values = array();
         foreach ($this->attributeNames() as $name) {
             $values[$name] = $this->_attributes[$name];
         }
         if (is_array($names)) {
-            $values2 = [];
+            $values2 = array();
             foreach ($names as $name) {
                 $values2[$name] = isset($values[$name]) ? $values[$name] : null;
             }
@@ -122,18 +126,18 @@ class DynamicModel extends \CModel
 
     /**
      * Gets attribute names from rules.
-     * @param array  $rules the validation rules. Please refer to [[CModel::rules()]] on the format of this parameter.
+     * @param array  $rules the validation rules. Please refer to {@see CModel::rules()} on the format of this parameter.
      * @param string $scenario name of the scenario that this model is used in.
      * @return array list attribute names.
-     * @throws \CException
+     * @throws CException
      */
     public static function getAttributesFromRules(array $rules, $scenario = '')
     {
-        $result = [];
+        $result = array();
         foreach ($rules as $rule) {
             if (!isset($rule[0], $rule[1])) {
-                throw new \CException(
-                    \Yii::t(
+                throw new CException(
+                    Yii::t(
                         'yii',
                         'Invalid validation rule. The rule must specify attributes to be validated and the validator name.'
                     )
@@ -167,7 +171,7 @@ class DynamicModel extends \CModel
                 }
             }
 
-            $result = \CMap::mergeArray($result, $attributes);
+            $result = CMap::mergeArray($result, $attributes);
         }
 
         return $result;
@@ -177,7 +181,7 @@ class DynamicModel extends \CModel
      * Sets the attribute values in a massive way.
      * @param array   $values attribute values (name=>value) to be set.
      * @param boolean $safeOnly whether the assignments should only be done to the safe attributes.
-     * A safe attribute is one that is associated with a validation rule in the current [[scenario]].
+     * A safe attribute is one that is associated with a validation rule in the current {@see scenario}.
      * @see getSafeAttributeNames
      * @see attributeNames
      */
@@ -196,13 +200,7 @@ class DynamicModel extends \CModel
         }
     }
 
-    /**
-     * Sets the attributes to be null.
-     * @param array $names list of attributes to be set null. If this parameter is not given,
-     * all attributes as specified by [[attributeNames]] will have their values unset.
-     * @since 1.1.3
-     */
-    public function unsetAttributes($names = null)
+    public function unsetAttributeNames($names = null)
     {
         if ($names === null) {
             $names = $this->attributeNames();
@@ -229,15 +227,15 @@ class DynamicModel extends \CModel
      * // $params refers to validation parameters given in the rule
      * function validatorName($attribute,$params)
      * </pre>
-     *   A built-in validator refers to one of the validators declared in [[CValidator::builtInValidators]].
-     *   And a validator class is a class extending [[CValidator]].</li>
+     *   A built-in validator refers to one of the validators declared in {@see CValidator::builtInValidators}.
+     *   And a validator class is a class extending {@see CValidator}.</li>
      * <li>on: this specifies the scenarios when the validation rule should be performed.
      *   Separate different scenarios with commas. If this option is not set, the rule
-     *   will be applied in any scenario that is not listed in "except". Please see [[scenario]] for more details about this option.</li>
+     *   will be applied in any scenario that is not listed in "except". Please see {@see scenario} for more details about this option.</li>
      * <li>except: this specifies the scenarios when the validation rule should not be performed.
-     *   Separate different scenarios with commas. Please see [[scenario]] for more details about this option.</li>
+     *   Separate different scenarios with commas. Please see {@see scenario} for more details about this option.</li>
      * <li>additional parameters are used to initialize the corresponding validator properties.
-     *   Please refer to individal validator class API for possible properties.</li>
+     *   Please refer to individual validator class API for possible properties.</li>
      * </ul>
      * The following are some examples:
      * <pre>
@@ -250,7 +248,7 @@ class DynamicModel extends \CModel
      * </pre>
      * Note, in order to inherit rules defined in the parent class, a child class needs to
      * merge the parent rules with child rules using functions like array_merge().
-     * @return array validation rules to be applied when [[validate()]] is called.
+     * @return array validation rules to be applied when {@see validate()} is called.
      * @see scenario
      */
     public function rules()
@@ -268,7 +266,7 @@ class DynamicModel extends \CModel
      * </pre>
      * @param string $name the property name or event name
      * @return mixed the property value, event handlers attached to the event, or the named behavior
-     * @throws \CException if the property or event is not defined
+     * @throws CException if the property or event is not defined
      * @see __set
      */
     public function __get($name)
@@ -290,8 +288,8 @@ class DynamicModel extends \CModel
      * </pre>
      * @param string $name the property name or the event name
      * @param mixed  $value the property value or callback
-     * @return mixed
-     * @throws \CException if the property/event is not defined or the property is read only.
+     * @return void
+     * @throws CException if the property/event is not defined or the property is read only.
      * @see __get
      */
     public function __set($name, $value)
@@ -324,8 +322,8 @@ class DynamicModel extends \CModel
      * Do not call this method. This is a PHP magic method that we override
      * to allow using unset() to set a component property to be null.
      * @param string $name the property name or the event name
-     * @throws \CException if the property is read only.
-     * @return mixed
+     * @throws CException if the property is read only.
+     * @return void
      */
     public function __unset($name)
     {
@@ -370,7 +368,7 @@ class DynamicModel extends \CModel
     }
 
     /**
-     * Unsets the element at the specified offset.
+     * Unset the element at the specified offset.
      * This method is required by the interface ArrayAccess.
      * @param mixed $offset the offset to unset element
      */
